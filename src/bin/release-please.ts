@@ -30,6 +30,7 @@ import {
 } from '../factory';
 import {Bootstrapper} from '../bootstrapper';
 import {createPatch} from 'diff';
+import {writeFileSync} from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const parseGithubRepoUrl = require('parse-github-repo-url');
@@ -43,6 +44,7 @@ interface ErrorObject {
 
 interface GitHubArgs {
   dryRun?: boolean;
+  outputDryRun?: string;
   trace?: boolean;
   repoUrl?: string;
   token?: string;
@@ -186,6 +188,10 @@ function gitHubOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Prepare but do not take action',
       type: 'boolean',
       default: false,
+    })
+    .option('output-dry-run', {
+      describe: 'Where to output the dry-run results as JSON',
+      type: 'string',
     })
     .middleware(_argv => {
       const argv = _argv as GitHubArgs;
@@ -533,6 +539,10 @@ const createReleasePullRequestCommand: yargs.CommandModule<
             }
           }
         }
+      }
+
+      if (argv.outputDryRun) {
+        writeFileSync(argv.outputDryRun, JSON.stringify(pullRequests, null, 2));
       }
     } else {
       const pullRequestNumbers = await manifest.createPullRequests(
