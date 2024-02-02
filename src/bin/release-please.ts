@@ -44,7 +44,7 @@ interface ErrorObject {
 
 interface GitHubArgs {
   dryRun?: boolean;
-  outputDryRun?: string;
+  dryRunOutput?: string;
   trace?: boolean;
   repoUrl?: string;
   token?: string;
@@ -189,7 +189,7 @@ function gitHubOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
-    .option('output-dry-run', {
+    .option('dry-run-output', {
       describe: 'Where to output the dry-run results as JSON',
       type: 'string',
     })
@@ -541,8 +541,8 @@ const createReleasePullRequestCommand: yargs.CommandModule<
         }
       }
 
-      if (argv.outputDryRun) {
-        writeFileSync(argv.outputDryRun, JSON.stringify(pullRequests, null, 2));
+      if (argv.dryRunOutput) {
+        writeFileSync(argv.dryRunOutput, JSON.stringify(pullRequests, null, 2));
       }
     } else {
       const pullRequestNumbers = await manifest.createPullRequests(
