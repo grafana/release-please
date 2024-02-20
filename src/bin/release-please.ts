@@ -99,6 +99,7 @@ interface PullRequestArgs {
   label?: string;
   skipLabeling?: boolean;
   signoff?: string;
+  separatePullRequests?: boolean;
 }
 
 interface PullRequestStrategyArgs {
@@ -263,6 +264,12 @@ function pullRequestOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'Add Signed-off-by line at the end of the commit log message using the user and email provided. (format "Name <email@example.com>").',
       type: 'string',
+    })
+    .option('separate-pull-requests', {
+      describe:
+        'create separate pull requests for each package instead of a single manifest release pull request',
+      type: 'boolean',
+      default: true,
     });
 }
 
@@ -919,6 +926,9 @@ function extractManifestOptions(
   }
   if ('draftPullRequest' in argv && argv.draftPullRequest !== undefined) {
     manifestOptions.draftPullRequest = argv.draftPullRequest;
+  }
+  if ( 'separatePullRequests' in argv && argv.separatePullRequests !== undefined) {
+    manifestOptions.separatePullRequests = argv.separatePullRequests;
   }
   return manifestOptions;
 }
