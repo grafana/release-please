@@ -460,7 +460,8 @@ export class Manifest {
     targetBranch: string,
     config: ReleaserConfig,
     manifestOptions?: ManifestOptions,
-    path: string = ROOT_PROJECT_PATH
+    path: string = ROOT_PROJECT_PATH,
+    manifestFile?: string
   ): Promise<Manifest> {
     const repositoryConfig: RepositoryConfig = {};
     repositoryConfig[path] = config;
@@ -469,18 +470,27 @@ export class Manifest {
       ...config,
     });
     const component = await strategy.getBranchComponent();
-    const releasedVersions: ReleasedVersions = {};
-    const latestVersion = await latestReleaseVersion(
-      github,
-      targetBranch,
-      version => isPublishedVersion(strategy, version),
-      config,
-      component,
-      manifestOptions?.logger
-    );
-    if (latestVersion) {
-      releasedVersions[path] = latestVersion;
+    let releasedVersions: ReleasedVersions = {};
+    if (manifestFile) {
+      releasedVersions = await parseReleasedVersions(
+        github,
+        manifestFile,
+        targetBranch
+      );
+    } else {
+      const latestVersion = await latestReleaseVersion(
+        github,
+        targetBranch,
+        version => isPublishedVersion(strategy, version),
+        config,
+        component,
+        manifestOptions?.logger
+      );
+      if (latestVersion) {
+        releasedVersions[path] = latestVersion;
+      }
     }
+
     return new Manifest(
       github,
       targetBranch,
@@ -808,7 +818,7 @@ export class Manifest {
     // Combine pull requests into 1 unless configured for separate
     // pull requests
     if (!this.separatePullRequests) {
-      this.logger.debug(`combining pull requests into one`)
+      this.logger.debug('combining pull requests into one');
       const mergeOptions: MergeOptions = {
         pullRequestTitlePattern: this.groupPullRequestTitlePattern,
       };
@@ -838,7 +848,9 @@ export class Manifest {
         )
       );
     } else {
-      this.logger.debug(`creating separate pull requests becuase separate pull requests is ${this.separatePullRequests}`)
+      this.logger.debug(
+        `creating separate pull requests because separate pull requests is ${this.separatePullRequests}`
+      );
     }
 
     for (const plugin of this.plugins) {

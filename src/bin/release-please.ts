@@ -495,7 +495,8 @@ const createReleasePullRequestCommand: yargs.CommandModule<
           considerAllBranches: argv.considerAllBranches,
         },
         extractManifestOptions(argv),
-        argv.path
+        argv.path,
+        argv.manifestFile
       );
     } else {
       const manifestOptions = extractManifestOptions(argv);
@@ -591,7 +592,8 @@ const createReleaseCommand: yargs.CommandModule<{}, CreateReleaseArgs> = {
           includeVInTag: argv.includeVInTags,
         },
         extractManifestOptions(argv),
-        argv.path
+        argv.path,
+        argv.manifestFile
       );
     } else {
       const manifestOptions = extractManifestOptions(argv);
@@ -858,10 +860,10 @@ export const parser = yargs
   })
   .middleware(argv => {
     if (argv.trace) {
-      console.log('setting trace logging')
+      console.log('setting trace logging');
       setLogger(new CheckpointLogger(true, true));
     } else if (argv.debug) {
-      console.log('setting debug logging')
+      console.log('setting debug logging');
       setLogger(new CheckpointLogger(true));
     }
   })
@@ -927,7 +929,10 @@ function extractManifestOptions(
   if ('draftPullRequest' in argv && argv.draftPullRequest !== undefined) {
     manifestOptions.draftPullRequest = argv.draftPullRequest;
   }
-  if ( 'separatePullRequests' in argv && argv.separatePullRequests !== undefined) {
+  if (
+    'separatePullRequests' in argv &&
+    argv.separatePullRequests !== undefined
+  ) {
     manifestOptions.separatePullRequests = argv.separatePullRequests;
   }
   return manifestOptions;
