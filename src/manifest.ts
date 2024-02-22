@@ -818,7 +818,6 @@ export class Manifest {
     // Combine pull requests into 1 unless configured for separate
     // pull requests
     if (!this.separatePullRequests) {
-      this.logger.debug('combining pull requests into one');
       const mergeOptions: MergeOptions = {
         pullRequestTitlePattern: this.groupPullRequestTitlePattern,
       };
@@ -846,10 +845,6 @@ export class Manifest {
           this.repositoryConfig,
           mergeOptions
         )
-      );
-    } else {
-      this.logger.debug(
-        `creating separate pull requests because separate pull requests is ${this.separatePullRequests}`
       );
     }
 

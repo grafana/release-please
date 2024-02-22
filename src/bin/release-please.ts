@@ -860,10 +860,8 @@ export const parser = yargs
   })
   .middleware(argv => {
     if (argv.trace) {
-      console.log('setting trace logging');
       setLogger(new CheckpointLogger(true, true));
     } else if (argv.debug) {
-      console.log('setting debug logging');
       setLogger(new CheckpointLogger(true));
     }
   })
