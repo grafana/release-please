@@ -176,6 +176,7 @@ interface ReleaserConfigJson {
   'skip-snapshot'?: boolean; // Java-only
   'initial-version'?: string;
   'exclude-paths'?: string[]; // manifest-only
+  'consider-all-branches'?: boolean;
 }
 
 export interface ManifestOptions {
@@ -1409,6 +1410,7 @@ function extractReleaserConfig(
     skipSnapshot: config['skip-snapshot'],
     initialVersion: config['initial-version'],
     excludePaths: config['exclude-paths'],
+    considerAllBranches: config['consider-all-branches'],
   };
 }
 
