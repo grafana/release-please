@@ -100,6 +100,7 @@ interface PullRequestArgs {
   skipLabeling?: boolean;
   signoff?: string;
   separatePullRequests?: boolean;
+  groupPullRequestTitlePattern?: string;
 }
 
 interface PullRequestStrategyArgs {
