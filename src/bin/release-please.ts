@@ -266,10 +266,14 @@ function pullRequestOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .option('separate-pull-requests', {
-      describe:
-        'create separate pull requests for each package instead of a single manifest release pull request',
+      describe: 'open a separate release pull request for each component',
       type: 'boolean',
       default: true,
+    })
+    .option('group-pull-request-title-pattern', {
+      describe:
+        'when grouping multiple release pull requests use this pattern for the title',
+      type: 'string',
     });
 }
 
@@ -932,6 +936,12 @@ function extractManifestOptions(
     argv.separatePullRequests !== undefined
   ) {
     manifestOptions.separatePullRequests = argv.separatePullRequests;
+  }
+  if (
+    'groupPullRequestTitlePattern' in argv &&
+    argv.groupPullRequestTitlePattern
+  ) {
+    manifestOptions.groupPullRequestTitlePattern = argv.groupPullRequestTitlePattern;
   }
   return manifestOptions;
 }
