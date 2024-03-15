@@ -92,6 +92,7 @@ interface ReleaseArgs {
   releaseLabel?: string;
   snapshotLabel?: string;
   label?: string;
+  shasToTag?: string;
 }
 
 interface PullRequestArgs {
@@ -235,6 +236,11 @@ function releaseOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'set a java snapshot pull request label other than "autorelease: snapshot"',
       default: 'autorelease: snapshot',
+      type: 'string',
+    })
+    .option('shas-to-tag', {
+      describe:
+        'a comma separated list of PR numbers and the corresponding sha to tag for that release in the format "1234:abc123,5678:def456"',
       type: 'string',
     });
 }
@@ -595,6 +601,7 @@ const createReleaseCommand: yargs.CommandModule<{}, CreateReleaseArgs> = {
           prerelease: argv.prerelease,
           includeComponentInTag: argv.monorepoTags,
           includeVInTag: argv.includeVInTags,
+          shasToTag: argv.shasToTag,
         },
         extractManifestOptions(argv),
         argv.path,

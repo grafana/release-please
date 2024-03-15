@@ -116,6 +116,7 @@ export interface ReleaserConfig {
   extraLabels?: string[];
   initialVersion?: string;
   considerAllBranches?: boolean;
+  shasToTag?: string;
 
   // Changelog options
   changelogSections?: ChangelogSection[];
@@ -1202,7 +1203,18 @@ export class Manifest {
         this.logger.debug(`type: ${config.releaseType}`);
         this.logger.debug(`targetBranch: ${this.targetBranch}`);
         const strategy = strategiesByPath[path];
+
+        const shasToTag = (config.shasToTag?.split(',') || []).reduce(
+          (memo: Map<number, string>, sha: string) => {
+            const parts = sha.split(':');
+            memo.set(parseInt(parts[0]), parts[1]);
+            return memo;
+          },
+          new Map<number, string>()
+        );
+
         const releases = await strategy.buildReleases(pullRequest, {
+          shasToTag,
           groupPullRequestTitlePattern: this.groupPullRequestTitlePattern,
         });
         for (const release of releases) {
