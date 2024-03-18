@@ -1205,9 +1205,13 @@ export class Manifest {
         const strategy = strategiesByPath[path];
 
         const shasToTag = (config.shasToTag?.split(',') || []).reduce(
-          (memo: Map<number, string>, sha: string) => {
-            const parts = sha.split(':');
-            memo.set(parseInt(parts[0]), parts[1]);
+          (memo: Map<number, string>, prNumAndSha: string) => {
+            const parts = prNumAndSha.split(':');
+            const prNumber = parts[0];
+            const sha = parts[1];
+
+            this.logger.info(`Using ${sha} as release for PR #${prNumber}`);
+            memo.set(parseInt(prNumber), sha);
             return memo;
           },
           new Map<number, string>()
@@ -1218,6 +1222,9 @@ export class Manifest {
           groupPullRequestTitlePattern: this.groupPullRequestTitlePattern,
         });
         for (const release of releases) {
+          this.logger.info(
+            `Tagging ${release.sha} as release for version ${release.tag.version}`
+          );
           candidateReleases.push({
             ...release,
             path,
