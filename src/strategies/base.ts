@@ -42,6 +42,7 @@ import {GenericXml} from '../updaters/generic-xml';
 import {PomXml} from '../updaters/java/pom-xml';
 import {GenericYaml} from '../updaters/generic-yaml';
 import {GenericToml} from '../updaters/generic-toml';
+import {merge} from 'diff';
 
 const DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md';
 
@@ -659,6 +660,14 @@ export abstract class BaseStrategy implements Strategy {
       return;
     }
 
+    const _sha: string | undefined = options?.shasToTag?.get(
+      mergedPullRequest.number
+    );
+    const shaToTag: string =
+      _sha !== undefined && _sha !== null && _sha
+        ? _sha
+        : mergedPullRequest.sha;
+
     const tag = new TagName(
       version,
       this.includeComponentInTag ? component : undefined,
@@ -673,7 +682,7 @@ export abstract class BaseStrategy implements Strategy {
       name: releaseName,
       tag,
       notes: notes || '',
-      sha: mergedPullRequest.sha,
+      sha: shaToTag,
     };
   }
 

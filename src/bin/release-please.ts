@@ -30,6 +30,7 @@ import {
 } from '../factory';
 import {Bootstrapper} from '../bootstrapper';
 import {createPatch} from 'diff';
+import {writeFileSync} from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const parseGithubRepoUrl = require('parse-github-repo-url');
@@ -43,6 +44,7 @@ interface ErrorObject {
 
 interface GitHubArgs {
   dryRun?: boolean;
+  dryRunOutput?: string;
   trace?: boolean;
   repoUrl?: string;
   token?: string;
@@ -73,6 +75,8 @@ interface VersioningArgs {
   latestTagVersion?: string;
   latestTagSha?: string;
   latestTagName?: string;
+
+  considerAllBranches?: boolean;
 }
 
 interface ManifestConfigArgs {
@@ -88,6 +92,7 @@ interface ReleaseArgs {
   releaseLabel?: string;
   snapshotLabel?: string;
   label?: string;
+  shasToTag?: string;
 }
 
 interface PullRequestArgs {
@@ -95,6 +100,8 @@ interface PullRequestArgs {
   label?: string;
   skipLabeling?: boolean;
   signoff?: string;
+  separatePullRequests?: boolean;
+  groupPullRequestTitlePattern?: string;
 }
 
 interface PullRequestStrategyArgs {
@@ -185,6 +192,10 @@ function gitHubOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('dry-run-output', {
+      describe: 'Where to output the dry-run results as JSON',
+      type: 'string',
+    })
     .middleware(_argv => {
       const argv = _argv as GitHubArgs;
       // allow secrets to be loaded from file path
@@ -226,6 +237,11 @@ function releaseOptions(yargs: yargs.Argv): yargs.Argv {
         'set a java snapshot pull request label other than "autorelease: snapshot"',
       default: 'autorelease: snapshot',
       type: 'string',
+    })
+    .option('shas-to-tag', {
+      describe:
+        'a comma separated list of PR numbers and the corresponding sha to tag for that release in the format "1234:abc123,5678:def456"',
+      type: 'string',
     });
 }
 
@@ -254,6 +270,16 @@ function pullRequestOptions(yargs: yargs.Argv): yargs.Argv {
     .option('signoff', {
       describe:
         'Add Signed-off-by line at the end of the commit log message using the user and email provided. (format "Name <email@example.com>").',
+      type: 'string',
+    })
+    .option('separate-pull-requests', {
+      describe: 'open a separate release pull request for each component',
+      type: 'boolean',
+      default: true,
+    })
+    .option('group-pull-request-title-pattern', {
+      describe:
+        'when grouping multiple release pull requests use this pattern for the title',
       type: 'string',
     });
 }
@@ -344,6 +370,12 @@ function pullRequestStrategyOptions(yargs: yargs.Argv): yargs.Argv {
     .option('latest-tag-name', {
       describe: 'Override the detected latest tag name',
       type: 'string',
+    })
+    .option('consider-all-branches', {
+      describe:
+        'Consider commits from all branches when determining changes for the latest release',
+      default: false,
+      type: 'boolean',
     })
     .middleware(_argv => {
       const argv = _argv as CreatePullRequestArgs;
@@ -471,9 +503,11 @@ const createReleasePullRequestCommand: yargs.CommandModule<
           versionFile: argv.versionFile,
           includeComponentInTag: argv.monorepoTags,
           includeVInTag: argv.includeVInTags,
+          considerAllBranches: argv.considerAllBranches,
         },
         extractManifestOptions(argv),
-        argv.path
+        argv.path,
+        argv.manifestFile
       );
     } else {
       const manifestOptions = extractManifestOptions(argv);
@@ -489,7 +523,9 @@ const createReleasePullRequestCommand: yargs.CommandModule<
     }
 
     if (argv.dryRun) {
-      const pullRequests = await manifest.buildPullRequests();
+      const pullRequests = await manifest.buildPullRequests(
+        argv.considerAllBranches
+      );
       console.log(`Would open ${pullRequests.length} pull requests`);
       console.log('fork:', manifest.fork);
       for (const pullRequest of pullRequests) {
@@ -523,8 +559,14 @@ const createReleasePullRequestCommand: yargs.CommandModule<
           }
         }
       }
+
+      if (argv.dryRunOutput) {
+        writeFileSync(argv.dryRunOutput, JSON.stringify(pullRequests, null, 2));
+      }
     } else {
-      const pullRequestNumbers = await manifest.createPullRequests();
+      const pullRequestNumbers = await manifest.createPullRequests(
+        argv.considerAllBranches
+      );
       console.log(pullRequestNumbers);
     }
   },
@@ -559,9 +601,11 @@ const createReleaseCommand: yargs.CommandModule<{}, CreateReleaseArgs> = {
           prerelease: argv.prerelease,
           includeComponentInTag: argv.monorepoTags,
           includeVInTag: argv.includeVInTags,
+          shasToTag: argv.shasToTag,
         },
         extractManifestOptions(argv),
-        argv.path
+        argv.path,
+        argv.manifestFile
       );
     } else {
       const manifestOptions = extractManifestOptions(argv);
@@ -894,6 +938,18 @@ function extractManifestOptions(
   }
   if ('draftPullRequest' in argv && argv.draftPullRequest !== undefined) {
     manifestOptions.draftPullRequest = argv.draftPullRequest;
+  }
+  if (
+    'separatePullRequests' in argv &&
+    argv.separatePullRequests !== undefined
+  ) {
+    manifestOptions.separatePullRequests = argv.separatePullRequests;
+  }
+  if (
+    'groupPullRequestTitlePattern' in argv &&
+    argv.groupPullRequestTitlePattern
+  ) {
+    manifestOptions.groupPullRequestTitlePattern = argv.groupPullRequestTitlePattern;
   }
   return manifestOptions;
 }

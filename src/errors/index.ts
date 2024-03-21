@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import {RequestError} from '@octokit/request-error';
-import {RequestError as RequestErrorBody} from '@octokit/types';
+import {
+  RequestError as RequestErrorBody,
+  ResponseHeaders,
+} from '@octokit/types';
 
 interface SingleError {
   resource: string;
@@ -45,6 +48,7 @@ export class GitHubAPIError extends Error {
   body: RequestErrorBody | undefined;
   status: number;
   cause?: Error;
+  headers?: ResponseHeaders;
   constructor(requestError: RequestError, message?: string) {
     super(message ?? requestError.message);
     this.status = requestError.status;
@@ -52,6 +56,7 @@ export class GitHubAPIError extends Error {
     this.name = GitHubAPIError.name;
     this.cause = requestError;
     this.stack = requestError.stack;
+    this.headers = requestError.response?.headers;
   }
 
   static parseErrorBody(

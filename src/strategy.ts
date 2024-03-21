@@ -22,6 +22,7 @@ import {Version} from './version';
 
 export interface BuildReleaseOptions {
   groupPullRequestTitlePattern?: string;
+  shasToTag: Map<number, string>;
 }
 
 export interface BumpReleaseOptions {
