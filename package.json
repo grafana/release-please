@@ -5,9 +5,9 @@
   "main": "./build/src/index.js",
   "bin": "./build/src/bin/release-please.js",
   "scripts": {
-    "test": "cross-env ENVIRONMENT=test LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
+    "test": "yarn compile && cross-env ENVIRONMENT=test LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
     "docs": "echo add docs tests",
-    "test:snap": "cross-env SNAPSHOT_UPDATE=1 LC_ALL=en yarn test",
+    "test:snap": "yarn compile && cross-env SNAPSHOT_UPDATE=1 LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
     "clean": "gts clean",
     "prepare": "yarn compile",
     "lint": "gts check",
