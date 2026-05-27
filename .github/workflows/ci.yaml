@@ -73,41 +73,10 @@ jobs:
       - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d # v1 (1.11.0)
         with:
           paths: docs/
-  build-action:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: google-github-actions/release-please-action
-          ref: main
-          persist-credentials: false
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      # When npm git-clones this fork, it runs the `prepare` lifecycle
-      # script, which calls `yarn compile`. Corepack must be enabled so
-      # yarn@4 (per packageManager in package.json) is used instead of the
-      # runner's pre-installed yarn 1.22.22.
-      - run: corepack enable
-      # Install THIS commit of THIS fork into the action repo to verify the
-      # action still builds against our changes. Use github.sha (always a
-      # 40-char hex commit SHA for both push and pull_request events) rather
-      # than parsing GITHUB_REF, because for PR events GITHUB_REF is
-      # `refs/pull/<n>/merge` which after stripping yields `<n>/merge` and
-      # fails any reasonable allow-list regex. Pass values via `env:` to
-      # satisfy zizmor's template-injection rule.
-      - run: |
-          if [[ ! "$SHA" =~ ^[a-f0-9]{40}$ ]]; then
-            echo "Error: Invalid commit SHA: $SHA. Aborting installation."
-            exit 1
-          fi
-          if [[ ! "$REPO" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
-            echo "Error: Invalid repo slug: $REPO. Aborting installation."
-            exit 1
-          fi
-          echo "Installing $REPO#$SHA"
-          npm install --save "$REPO#$SHA"
-        env:
-          SHA: ${{ github.sha }}
-          REPO: ${{ github.repository }}
-      - run: npm run build
+  # NOTE: upstream googleapis/release-please ships a `build-action` job here
+  # that installs this repo into `google-github-actions/release-please-action`
+  # and runs that action's build. The Grafana fork does NOT use that action
+  # (it consumes the release-please CLI directly), and the action repo has
+  # been abandoned since 2024-05-13 — its last commit literally added a
+  # deprecation warning. The job is removed here as an intentional fork-only
+  # deviation. See .agents/skills/sync-upstream-fork/SKILL.md (deviation E).

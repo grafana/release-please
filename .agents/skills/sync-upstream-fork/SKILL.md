@@ -101,6 +101,19 @@ These changes exist on `grafana/release-please` but **not** on `googleapis/relea
   - `grep -Fq 'REF=${GITHUB_REF#refs/*/}' .github/workflows/ci.yaml`
   - `grep -Fq 'Invalid ref format detected' .github/workflows/ci.yaml`
 
+### E. Removed `build-action` CI job (upstream-only, tests an abandoned action)
+
+- **Status**: fork-only deletion. Upstream `.github/workflows/ci.yaml` ships a `build-action:` job; the fork does NOT.
+- **Why removed**:
+  - It installs `grafana/release-please` into `google-github-actions/release-please-action` and runs that action's build.
+  - That action repo has been abandoned since 2024-05-13 — the last upstream commit there literally added a deprecation warning to the action.
+  - The Grafana fork consumes the release-please CLI directly; we have no integration with the action and don't need to verify the action can build against our code.
+  - Even with `corepack enable` and a SHA-based install, the job fails because the npm-via-git-dep prepare flow + yarn 4 lockfile semantics no longer cooperate on the action's repo.
+- **Sanity check after sync**:
+  - `! grep -q '^\s*build-action:' .github/workflows/ci.yaml` (job must NOT reappear)
+  - There should be a comment block in `.github/workflows/ci.yaml` explaining why the job was removed (search for "build-action job" or "deviation E").
+- **Conflict handling**: if an upstream sync re-introduces the `build-action:` job, delete it again and restore the explanatory comment. Do NOT spend time trying to make it work — there's no consumer.
+
 ### D. Yarn build tooling (replaces npm everywhere except npm-publish operations)
 
 - **Status**: uncommitted as of the original yarn refactor; once committed it will be part of `main`.
@@ -109,12 +122,11 @@ These changes exist on `grafana/release-please` but **not** on `googleapis/relea
   - `yarn.lock` — committed (replaces `package-lock.json`, which is deleted and `.gitignore`d)
   - `.yarnrc.yml` — `nodeLinker: node-modules`, `enableGlobalCache: false`, plus supply-chain hardening: `enableScripts: false` (block third-party install/postinstall scripts; workspace scripts still run) and `npmMinimalAgeGate: "7d"` (refuse package versions <7 days old; requires yarn ≥ 4.10)
   - `.gitignore` — adds `.yarn/*` carve-outs (`releases`, `patches`, `plugins`, `sdks`, `versions` kept) and `.pnp.*`
-  - `.github/workflows/ci.yaml` — `corepack enable` + `yarn install --immutable` + `yarn test/lint/docs`; production-deps sanity check uses `yarn workspaces focus --production`
+  - `.github/workflows/ci.yaml` — `corepack enable` + `yarn install --immutable` + `yarn test/lint/docs`; production-deps sanity check uses `yarn workspaces focus --production`. Also pins `JustinBeckwith/linkinator-action` to a commit SHA (was `@v1`, flagged by zizmor's `unpinned-uses`).
   - `.kokoro/test.sh`, `.kokoro/test.bat`, `.kokoro/lint.sh`, `.kokoro/docs.sh`, `.kokoro/system-test.sh`, `.kokoro/samples-test.sh`, `.kokoro/release/docs.sh`, `.kokoro/release/docs-devsite.sh` — yarn-ified
   - `CONTRIBUTING.md` — `yarn install` / `yarn test` / `yarn fix`
 - **Intentional npm holdouts** (do NOT yarn-ify these on sync):
   - `.kokoro/publish.sh` — keeps `npm pack` and `npm publish` (the wombat-dressing-room registry behavior is intentionally preserved)
-  - `.github/workflows/ci.yaml` `build-action` job — `npm install --save googleapis/release-please#<ref>` is run against the `google-github-actions/release-please-action` checkout, not this repo
   - `.kokoro/release/docs.sh` — `npm i json@9.0.6 -g` (a global CLI tool, not project dependency management)
   - Docs/tests/snapshots that describe release-please's npm-publish *feature* (`docs/**`, `test/**`, `__snapshots__/**`, `templates/**`, README badge, `bug_report.md`'s "npm version" question)
 - **Sanity checks after sync**:
@@ -123,7 +135,7 @@ These changes exist on `grafana/release-please` but **not** on `googleapis/relea
   - `grep -q 'nodeLinker: node-modules' .yarnrc.yml`
   - `grep -q 'enableScripts: false' .yarnrc.yml`
   - `grep -q 'npmMinimalAgeGate:' .yarnrc.yml`
-  - `! grep -E '^\s*-?\s*(run|call):.*\bnpm (install|test|run)' .github/workflows/ci.yaml .kokoro/test.sh .kokoro/test.bat .kokoro/lint.sh .kokoro/docs.sh .kokoro/system-test.sh .kokoro/samples-test.sh .kokoro/release/docs.sh .kokoro/release/docs-devsite.sh` (no `npm install/test/run` in build-tooling files; the `build-action` job's `npm install --save` is fine because it targets a different repo)
+  - `! grep -E '^\s*-?\s*(run|call):.*\bnpm (install|test|run)' .github/workflows/ci.yaml .kokoro/test.sh .kokoro/test.bat .kokoro/lint.sh .kokoro/docs.sh .kokoro/system-test.sh .kokoro/samples-test.sh .kokoro/release/docs.sh .kokoro/release/docs-devsite.sh` (no `npm install/test/run` in build-tooling files since deviation E removed the `build-action` job that needed npm)
 
 ---
 
@@ -241,7 +253,7 @@ Then apply the rules below.
 | `src/manifest.ts` | Keep our `considerAllBranches` plumbing, dry-run JSON output, and `fromConfig(manifestFile, ...)` overload. Apply upstream changes to the rest. |
 | `src/errors/index.ts` | Keep our `headers` field on the error type (deviation B). |
 | `src/strategies/base.ts`, `src/strategy.ts` | Keep our optional `sha` parameter used when publishing a release. |
-| `.github/workflows/ci.yaml` | **Both** keep yarn commands (deviation D) **and** `persist-credentials: false` on every checkout (deviation C) **and** the sanitized-`GITHUB_REF` block in the `build-action` job. The `build-action` job legitimately uses `npm install --save`; do not yarn-ify it. |
+| `.github/workflows/ci.yaml` | **Both** keep yarn commands (deviation D) **and** `persist-credentials: false` on every checkout (deviation C) **and** the SHA-pinned `JustinBeckwith/linkinator-action` (deviation D, zizmor). **Do not** re-add the upstream `build-action:` job (deviation E). |
 | `package.json` | Keep `"packageManager": "yarn@…"`, `"engines.node": ">=18.0.0"`, and the yarn-form scripts. If upstream added/changed dependencies, merge those into the deps maps. |
 | `package-lock.json` | If git recreates it from upstream, delete it again — we use `yarn.lock` only (deviation D). Run `yarn install` afterwards to regenerate `yarn.lock`. |
 | `yarn.lock` | After dependency changes resolve, run `yarn install` to update — never hand-edit. If a newly added/updated dep fails the `npmMinimalAgeGate` check, either wait for the version to age in, or add the package to `npmPreapprovedPackages` in `.yarnrc.yml` (only with a clear justification). |
@@ -297,6 +309,9 @@ grep -q '"packageManager": "yarn@' package.json
 grep -q 'nodeLinker: node-modules' .yarnrc.yml
 grep -q 'enableScripts: false' .yarnrc.yml
 grep -q 'npmMinimalAgeGate:' .yarnrc.yml
+grep -q 'JustinBeckwith/linkinator-action@[0-9a-f]\{40\}' .github/workflows/ci.yaml
+# Deviation E — build-action job intentionally removed
+! grep -Eq '^\s*build-action:' .github/workflows/ci.yaml
 echo "All intentional deviations preserved ✅"
 ```
 
