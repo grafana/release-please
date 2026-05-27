@@ -67,7 +67,10 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn docs
-      - uses: JustinBeckwith/linkinator-action@v1
+      # Pinned to the commit that release v1 (1.11.0) points to, so the
+      # action can't be silently re-pointed by retagging upstream.
+      # See https://github.com/JustinBeckwith/linkinator-action/releases/tag/v1
+      - uses: JustinBeckwith/linkinator-action@3d5ba091319fa7b0ac14703761eebb7d100e6f6d # v1 (1.11.0)
         with:
           paths: docs/
   build-action:
@@ -81,18 +84,25 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      # Install THIS commit of THIS fork into the action repo to verify the
+      # action still builds against our changes. Use github.sha (always a
+      # 40-char hex commit SHA for both push and pull_request events) rather
+      # than parsing GITHUB_REF, because for PR events GITHUB_REF is
+      # `refs/pull/<n>/merge` which after stripping yields `<n>/merge` and
+      # fails any reasonable allow-list regex. Pass values via `env:` to
+      # satisfy zizmor's template-injection rule.
       - run: |
-          # Extract ref name from full ref path
-          REF=${GITHUB_REF#refs/*/}
-
-          # Validate ref format - allow only alphanumeric, dash, dot, and underscore
-          if [[ ! $REF =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            echo "Error: Invalid ref format detected. Aborting installation."
+          if [[ ! "$SHA" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "Error: Invalid commit SHA: $SHA. Aborting installation."
             exit 1
           fi
-
-          echo "Installing googleapis/release-please#${REF}"
-          npm install --save googleapis/release-please#${REF}
+          if [[ ! "$REPO" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
+            echo "Error: Invalid repo slug: $REPO. Aborting installation."
+            exit 1
+          fi
+          echo "Installing $REPO#$SHA"
+          npm install --save "$REPO#$SHA"
         env:
-          GITHUB_REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
       - run: npm run build
