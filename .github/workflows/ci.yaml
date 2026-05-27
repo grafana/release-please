@@ -18,14 +18,15 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --version
+      - run: corepack enable
       # The first installation step ensures that all of our production
       # dependencies work on the given Node.js version, this helps us find
       # dependencies that don't match our engines field:
-      - run: npm install --production --engine-strict --ignore-scripts --no-package-lock
+      - run: yarn workspaces focus --production
       # Clean up the production install, before installing dev/production:
       - run: rm -rf node_modules
-      - run: npm install
-      - run: npm test
+      - run: yarn install --immutable
+      - run: yarn test
         env:
           MOCHA_THROW_DEPRECATION: false
   windows:
@@ -37,8 +38,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm install
-      - run: npm test
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn test
         env:
           MOCHA_THROW_DEPRECATION: false
   lint:
@@ -50,8 +52,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm install
-      - run: npm run lint
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn lint
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -61,8 +64,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm install
-      - run: npm run docs
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn docs
       - uses: JustinBeckwith/linkinator-action@v1
         with:
           paths: docs/
@@ -80,13 +84,13 @@ jobs:
       - run: |
           # Extract ref name from full ref path
           REF=${GITHUB_REF#refs/*/}
-          
+
           # Validate ref format - allow only alphanumeric, dash, dot, and underscore
           if [[ ! $REF =~ ^[a-zA-Z0-9._-]+$ ]]; then
             echo "Error: Invalid ref format detected. Aborting installation."
             exit 1
           fi
-          
+
           echo "Installing googleapis/release-please#${REF}"
           npm install --save googleapis/release-please#${REF}
         env:

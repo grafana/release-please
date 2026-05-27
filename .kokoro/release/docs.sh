@@ -24,8 +24,9 @@ if [[ -z "$CREDENTIALS" ]]; then
   export PATH="$PATH:${NPM_CONFIG_PREFIX}/bin"
   cd $(dirname $0)/../..
 fi
-npm install
-npm run docs
+corepack enable
+yarn install --immutable
+yarn docs
 
 # create docs.metadata, based on package.json and .repo-metadata.json.
 npm i json@9.0.6 -g

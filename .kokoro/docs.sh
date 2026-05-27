@@ -20,6 +20,7 @@ export NPM_CONFIG_PREFIX=${HOME}/.npm-global
 
 cd $(dirname $0)/..
 
-npm install
+corepack enable
+yarn install --immutable
 
-npm run docs-test
+yarn docs-test

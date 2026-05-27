@@ -32,12 +32,13 @@ if [ -f .kokoro/pre-samples-test.sh ]; then
 fi
 
 if [ -f samples/package.json ]; then
-    npm install
+    corepack enable
+    yarn install --immutable
 
     # Install and link samples
     cd samples/
-    npm link ../
-    npm install
+    yarn link ../
+    yarn install
     cd ..
     # If tests are running against main branch, configure flakybot
     # to open issues on failures:
@@ -51,7 +52,7 @@ if [ -f samples/package.json ]; then
       trap cleanup EXIT HUP
     fi
 
-    npm run samples-test
+    yarn samples-test
 fi
 
 # codecov combines coverage across integration and unit tests. Include
