@@ -84,6 +84,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      # When npm git-clones this fork, it runs the `prepare` lifecycle
+      # script, which calls `yarn compile`. Corepack must be enabled so
+      # yarn@4 (per packageManager in package.json) is used instead of the
+      # runner's pre-installed yarn 1.22.22.
+      - run: corepack enable
       # Install THIS commit of THIS fork into the action repo to verify the
       # action still builds against our changes. Use github.sha (always a
       # 40-char hex commit SHA for both push and pull_request events) rather
