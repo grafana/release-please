@@ -9,14 +9,14 @@
     "docs": "echo add docs tests",
     "test:snap": "yarn compile && cross-env SNAPSHOT_UPDATE=1 LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
     "clean": "gts clean",
-    "prepare": "yarn compile",
+    "prepack": "tsc -p .",
     "lint": "gts check",
     "compile": "tsc -p .",
     "fix": "gts fix",
     "pretest": "yarn compile"
   },
   "files": [
-    "build/src",
+    "build/src/**",
     "templates",
     "!build/src/**/*.map",
     "schemas"
