@@ -1,42 +1,35 @@
 ---
 name: sync-upstream-fork
-description: Sync this Grafana fork of release-please with upstream googleapis/release-please while preserving our intentional deviations (multi-branch release support from PR #2203, dry-run JSON output, zizmor CI fixes, and yarn build tooling). Use when the user says "sync upstream", "update from upstream", "merge upstream", "rebase on upstream", "pull in upstream changes", "catch up with googleapis/release-please", or otherwise wants to integrate new commits from the upstream repository.
+description: Sync this Grafana fork of release-please with upstream googleapis/release-please while preserving our intentional deviations (multi-branch release support from PR #2203, dry-run JSON output, zizmor CI fixes, and yarn build tooling). Use when the user says "sync upstream", "update from upstream", "merge upstream", "pull in upstream changes", "catch up with googleapis/release-please", or otherwise wants to integrate new commits from the upstream repository.
 disable-model-invocation: true
 allowed-tools: Read, Bash, Glob, Grep
 ---
 
 # Sync This Fork With Upstream `googleapis/release-please`
 
-Helps integrate new commits from upstream `googleapis/release-please` into this Grafana fork while preserving the fork's intentional deviations. **A merge-based sync is the default** because `grafana/release-please` is consumed by other repos; rewriting `main`'s history would break them.
+Helps integrate new commits from upstream `googleapis/release-please` into this Grafana fork while preserving the fork's intentional deviations.
 
 ## Core Responsibilities
 
 1. **Prerequisite validation** — clean working tree, both remotes wired up, branches up to date
 2. **Identify the last shared commit** (merge-base) and what's new on upstream
 3. **Verify intentional deviations are still detectable** before integrating (so you'll know if a merge silently loses one)
-4. **Safety backup creation** — branch `backup/sync-upstream-<date>` before any merge/rebase
-5. **Perform the merge** (preferred) or rebase (only if explicitly requested)
+4. **Safety backup creation** — branch `backup/sync-upstream-<date>` before any merge
+5. **Perform the merge** of `upstream/main` into a sync branch
 6. **Resolve conflicts while preserving every documented deviation**
 7. **Validate** — `yarn install --immutable && yarn lint && yarn test` must pass
 8. **Recovery assistance** if the sync goes sideways
 
-## When Merge vs Rebase
+## Best Practices
 
-| Situation | Approach |
-| --- | --- |
-| Normal upstream sync of `main` (default) | **Merge** (`git merge upstream/main`) |
-| Long-running fork-only feature branch behind `main` | Rebase the feature branch onto fork `main` |
-| User explicitly asks for "rebase on upstream" | Rebase, then warn that `main` will need force-push and downstream consumers may break |
-| Upstream has done a force-push or history rewrite | Stop. Ask the user how to proceed — almost never the right thing to silently mirror. |
-
-> **Best Practices**
->
-> - ✅ Always create a backup branch before merging or rebasing
-> - ✅ Run the full `yarn test` suite after resolving conflicts (984+ tests today)
-> - ✅ Use `git commit -S` for the merge commit (signed commits are required in this repo)
-> - ✅ Keep the merge commit on `main`; do not squash a sync merge
-> - ❌ Never force-push `main` of this fork
-> - ❌ Never drop one of the documented deviations to make a conflict "easier"
+- ✅ Always create a backup branch before merging
+- ✅ Run the full `yarn test` suite after resolving conflicts (984+ tests today)
+- ✅ Use `git commit -S` for the merge commit (signed commits are required in this repo)
+- ✅ Keep the merge commit on `main`; do not squash a sync merge
+- ❌ Avoid doing a rebase of `main` onto upstream. If this is the only option
+  stop and prompt the user.
+- ❌ Never force-push `main` of this fork
+- ❌ Never drop one of the documented deviations to make a conflict "easier"
 
 ---
 
@@ -128,7 +121,7 @@ These changes exist on `grafana/release-please` but **not** on `googleapis/relea
 - **Intentional npm holdouts** (do NOT yarn-ify these on sync):
   - `.kokoro/publish.sh` — keeps `npm pack` and `npm publish` (the wombat-dressing-room registry behavior is intentionally preserved)
   - `.kokoro/release/docs.sh` — `npm i json@9.0.6 -g` (a global CLI tool, not project dependency management)
-  - Docs/tests/snapshots that describe release-please's npm-publish *feature* (`docs/**`, `test/**`, `__snapshots__/**`, `templates/**`, README badge, `bug_report.md`'s "npm version" question)
+  - Docs/tests/snapshots that describe release-please's npm-publish _feature_ (`docs/**`, `test/**`, `__snapshots__/**`, `templates/**`, README badge, `bug_report.md`'s "npm version" question)
 - **Sanity checks after sync**:
   - `test ! -f package-lock.json && test -f yarn.lock`
   - `grep -q '"packageManager": "yarn@' package.json`
@@ -172,7 +165,7 @@ comm -12 \
 
 ---
 
-## Safe Sync Workflow (Merge Strategy — Default)
+## Safe Sync Workflow
 
 ### Step 1: Validate prerequisites
 
@@ -184,6 +177,7 @@ git fetch origin && git fetch upstream --no-tags
 ```
 
 Stop if:
+
 - Working tree has uncommitted changes → commit or stash first
 - You're not on `main` (or a dedicated `sync/upstream-<date>` branch)
 - `upstream` remote is missing or points to the wrong repo
@@ -246,20 +240,20 @@ Then apply the rules below.
 
 #### File-by-file conflict guidance
 
-| File | Conflict strategy |
-| --- | --- |
-| `src/bin/release-please.ts` | Keep our CLI flags (`--consider-all-branches`, `--dry-run-output`, `--separate-pull-requests`, `--group-pull-request-title`, `--sha`, etc.) AND apply upstream's new flags/refactors. Re-derive a working `argv` definition that includes both sets. |
-| `src/github.ts` | Keep our compare-commits–based "previous release across branches" code (deviation A). If upstream refactored `GitHub` class methods, port our additions onto the new shape. |
-| `src/manifest.ts` | Keep our `considerAllBranches` plumbing, dry-run JSON output, and `fromConfig(manifestFile, ...)` overload. Apply upstream changes to the rest. |
-| `src/errors/index.ts` | Keep our `headers` field on the error type (deviation B). |
-| `src/strategies/base.ts`, `src/strategy.ts` | Keep our optional `sha` parameter used when publishing a release. |
-| `.github/workflows/ci.yaml` | **Both** keep yarn commands (deviation D) **and** `persist-credentials: false` on every checkout (deviation C) **and** the SHA-pinned `JustinBeckwith/linkinator-action` (deviation D, zizmor). **Do not** re-add the upstream `build-action:` job (deviation E). |
-| `package.json` | Keep `"packageManager": "yarn@…"`, `"engines.node": ">=18.0.0"`, and the yarn-form scripts. If upstream added/changed dependencies, merge those into the deps maps. |
-| `package-lock.json` | If git recreates it from upstream, delete it again — we use `yarn.lock` only (deviation D). Run `yarn install` afterwards to regenerate `yarn.lock`. |
-| `yarn.lock` | After dependency changes resolve, run `yarn install` to update — never hand-edit. If a newly added/updated dep fails the `npmMinimalAgeGate` check, either wait for the version to age in, or add the package to `npmPreapprovedPackages` in `.yarnrc.yml` (only with a clear justification). |
-| `.kokoro/*.sh`, `.kokoro/test.bat` | Keep yarn commands (deviation D). Exceptions: `.kokoro/publish.sh` keeps `npm pack`/`npm publish`; `.kokoro/release/docs.sh` keeps `npm i json@9.0.6 -g`. |
-| `CONTRIBUTING.md` | Keep `yarn install` / `yarn test` / `yarn fix`. |
-| `.gitignore` | Keep the `.yarn/*` carve-outs and `.pnp.*` block. |
+| File                                        | Conflict strategy                                                                                                                                                                                                                                                                             |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/bin/release-please.ts`                 | Keep our CLI flags (`--consider-all-branches`, `--dry-run-output`, `--separate-pull-requests`, `--group-pull-request-title`, `--sha`, etc.) AND apply upstream's new flags/refactors. Re-derive a working `argv` definition that includes both sets.                                          |
+| `src/github.ts`                             | Keep our compare-commits–based "previous release across branches" code (deviation A). If upstream refactored `GitHub` class methods, port our additions onto the new shape.                                                                                                                   |
+| `src/manifest.ts`                           | Keep our `considerAllBranches` plumbing, dry-run JSON output, and `fromConfig(manifestFile, ...)` overload. Apply upstream changes to the rest.                                                                                                                                               |
+| `src/errors/index.ts`                       | Keep our `headers` field on the error type (deviation B).                                                                                                                                                                                                                                     |
+| `src/strategies/base.ts`, `src/strategy.ts` | Keep our optional `sha` parameter used when publishing a release.                                                                                                                                                                                                                             |
+| `.github/workflows/ci.yaml`                 | **Both** keep yarn commands (deviation D) **and** `persist-credentials: false` on every checkout (deviation C) **and** the SHA-pinned `JustinBeckwith/linkinator-action` (deviation D, zizmor). **Do not** re-add the upstream `build-action:` job (deviation E).                             |
+| `package.json`                              | Keep `"packageManager": "yarn@…"`, `"engines.node": ">=18.0.0"`, and the yarn-form scripts. If upstream added/changed dependencies, merge those into the deps maps.                                                                                                                           |
+| `package-lock.json`                         | If git recreates it from upstream, delete it again — we use `yarn.lock` only (deviation D). Run `yarn install` afterwards to regenerate `yarn.lock`.                                                                                                                                          |
+| `yarn.lock`                                 | After dependency changes resolve, run `yarn install` to update — never hand-edit. If a newly added/updated dep fails the `npmMinimalAgeGate` check, either wait for the version to age in, or add the package to `npmPreapprovedPackages` in `.yarnrc.yml` (only with a clear justification). |
+| `.kokoro/*.sh`, `.kokoro/test.bat`          | Keep yarn commands (deviation D). Exceptions: `.kokoro/publish.sh` keeps `npm pack`/`npm publish`; `.kokoro/release/docs.sh` keeps `npm i json@9.0.6 -g`.                                                                                                                                     |
+| `CONTRIBUTING.md`                           | Keep `yarn install` / `yarn test` / `yarn fix`.                                                                                                                                                                                                                                               |
+| `.gitignore`                                | Keep the `.yarn/*` carve-outs and `.pnp.*` block.                                                                                                                                                                                                                                             |
 
 #### Generic conflict-resolution recipe
 
@@ -355,27 +349,11 @@ git branch -d "backup/main-pre-sync-$DATE"   # only after you're confident
 
 ---
 
-## Alternative: Rebase Strategy (only if explicitly requested)
-
-> ⚠️ Rebasing rewrites `main`. Downstream consumers using `googleapis/release-please#<sha>` or `grafana/release-please#main` will see history change. Confirm with the user before doing this.
-
-```bash
-git fetch upstream --no-tags
-git branch "backup/main-pre-rebase-$(date +%Y-%m-%d)"
-git rebase upstream/main         # resolve conflicts using the same per-file table above
-yarn install && yarn lint && yarn test
-git push --force-with-lease origin main
-```
-
-For long-running fork-only feature branches that need to catch up with fork `main`, the regular [git-rebase skill](../../../.pi/agent/skills/git-rebase/SKILL.md) applies — this skill is specifically for the fork-vs-upstream relationship.
-
----
-
 ## Recovery From a Bad Sync
 
 ```bash
-# Abort an in-progress merge or rebase
-git merge --abort     # or:  git rebase --abort
+# Abort an in-progress merge
+git merge --abort
 
 # Restore main from the backup branch you created in Step 3
 git checkout main
@@ -390,17 +368,17 @@ git reset --hard HEAD@{<n>}
 
 ## Troubleshooting
 
-| Issue | Solution |
-| --- | --- |
-| `upstream` remote missing | `git remote add upstream https://github.com/googleapis/release-please.git` |
-| `package-lock.json` reappears after merge | `rm package-lock.json && yarn install && git add yarn.lock .gitignore` (the file is `.gitignore`d — deviation D) |
-| `yarn install --immutable` fails post-merge | Upstream changed dependencies. Run plain `yarn install`, inspect the lockfile diff, commit. |
-| `yarn install` errors with "package is too recent" / minimum age | A new/bumped dependency is younger than `npmMinimalAgeGate` (`7d`). Wait for it to age in, pin to an older patch, or add it to `npmPreapprovedPackages` in `.yarnrc.yml` with a justification. |
-| A dep stops working because it needs a postinstall script | `enableScripts: false` blocks all dependency install scripts. Verify the package genuinely needs the script (most don't); if so, allow it narrowly via `dependenciesMeta` in `package.json` rather than flipping `enableScripts` globally. |
-| Tests fail in `src/manifest.ts` or `src/github.ts` after merge | One of the deviation A/B threads was likely dropped during conflict resolution. Re-run the "Verify intentional deviations" checks. |
-| CI lint fails on `.github/workflows/ci.yaml` | A `persist-credentials: false` line was probably dropped. Restore from deviation C. |
-| Commit signing fails | **STOP.** Per repo policy, surface to the user — do not commit unsigned. |
-| Upstream did a force-push / history rewrite | **STOP** and ask the user. Mirroring an upstream rewrite into this fork is almost never correct. |
+| Issue                                                            | Solution                                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `upstream` remote missing                                        | `git remote add upstream https://github.com/googleapis/release-please.git`                                                                                                                                                                 |
+| `package-lock.json` reappears after merge                        | `rm package-lock.json && yarn install && git add yarn.lock .gitignore` (the file is `.gitignore`d — deviation D)                                                                                                                           |
+| `yarn install --immutable` fails post-merge                      | Upstream changed dependencies. Run plain `yarn install`, inspect the lockfile diff, commit.                                                                                                                                                |
+| `yarn install` errors with "package is too recent" / minimum age | A new/bumped dependency is younger than `npmMinimalAgeGate` (`7d`). Wait for it to age in, pin to an older patch, or add it to `npmPreapprovedPackages` in `.yarnrc.yml` with a justification.                                             |
+| A dep stops working because it needs a postinstall script        | `enableScripts: false` blocks all dependency install scripts. Verify the package genuinely needs the script (most don't); if so, allow it narrowly via `dependenciesMeta` in `package.json` rather than flipping `enableScripts` globally. |
+| Tests fail in `src/manifest.ts` or `src/github.ts` after merge   | One of the deviation A/B threads was likely dropped during conflict resolution. Re-run the "Verify intentional deviations" checks.                                                                                                         |
+| CI lint fails on `.github/workflows/ci.yaml`                     | A `persist-credentials: false` line was probably dropped. Restore from deviation C.                                                                                                                                                        |
+| Commit signing fails                                             | **STOP.** Per repo policy, surface to the user — do not commit unsigned.                                                                                                                                                                   |
+| Upstream did a force-push / history rewrite                      | **STOP** and ask the user. Mirroring an upstream rewrite into this fork is almost never correct.                                                                                                                                           |
 
 ---
 
