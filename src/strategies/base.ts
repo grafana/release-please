@@ -42,7 +42,6 @@ import {GenericXml} from '../updaters/generic-xml';
 import {PomXml} from '../updaters/java/pom-xml';
 import {GenericYaml} from '../updaters/generic-yaml';
 import {GenericToml} from '../updaters/generic-toml';
-import {merge} from 'diff';
 
 const DEFAULT_CHANGELOG_PATH = 'CHANGELOG.md';
 

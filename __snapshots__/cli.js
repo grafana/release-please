@@ -25,6 +25,8 @@ Options:
   --repo-url                    GitHub URL to generate release for    [required]
   --dry-run                     Prepare but do not take action
                                                       [boolean] [default: false]
+  --dry-run-output              Where to output the dry-run results as JSON
+                                                                        [string]
   --include-v-in-tags           include "v" in tag versions
                                                        [boolean] [default: true]
   --monorepo-tags               include library name in tags and release
@@ -65,6 +67,9 @@ Options:
   --snapshot-label              set a java snapshot pull request label other
                                 than "autorelease: snapshot"
                                      [string] [default: "autorelease: snapshot"]
+  --shas-to-tag                 a comma separated list of PR numbers and the
+                                corresponding sha to tag for that release in the
+                                format "1234:abc123,5678:def456"        [string]
 `
 
 exports['CLI --help manifest-pr 1'] = `
@@ -73,38 +78,55 @@ release-please manifest-pr
 create a release-PR using a manifest file
 
 Options:
-  --help                Show help                                      [boolean]
-  --version             Show version number                            [boolean]
-  --debug               print verbose errors (use only for local debugging).
+  --help                              Show help                        [boolean]
+  --version                           Show version number              [boolean]
+  --debug                             print verbose errors (use only for local
+                                      debugging).     [boolean] [default: false]
+  --trace                             print extra verbose errors (use only for
+                                      local debugging).
                                                       [boolean] [default: false]
-  --trace               print extra verbose errors (use only for local
-                        debugging).                   [boolean] [default: false]
-  --plugin              load plugin named release-please-<plugin-name>
+  --plugin                            load plugin named
+                                      release-please-<plugin-name>
                                                            [array] [default: []]
-  --token               GitHub token with repo write permissions
-  --api-url             URL to use when making API requests
+  --token                             GitHub token with repo write permissions
+  --api-url                           URL to use when making API requests
                                     [string] [default: "https://api.github.com"]
-  --graphql-url         URL to use when making GraphQL requests
+  --graphql-url                       URL to use when making GraphQL requests
                                     [string] [default: "https://api.github.com"]
-  --default-branch      The branch to open release PRs against and tag releases
-                        on    [deprecated: use --target-branch instead] [string]
-  --target-branch       The branch to open release PRs against and tag releases
-                        on                                              [string]
-  --repo-url            GitHub URL to generate release for            [required]
-  --dry-run             Prepare but do not take action[boolean] [default: false]
-  --label               comma-separated list of labels to add to from release PR
+  --default-branch                    The branch to open release PRs against and
+                                      tag releases on
+                              [deprecated: use --target-branch instead] [string]
+  --target-branch                     The branch to open release PRs against and
+                                      tag releases on                   [string]
+  --repo-url                          GitHub URL to generate release for
+                                                                      [required]
+  --dry-run                           Prepare but do not take action
+                                                      [boolean] [default: false]
+  --dry-run-output                    Where to output the dry-run results as
+                                      JSON                              [string]
+  --label                             comma-separated list of labels to add to
+                                      from release PR
                                                [default: "autorelease: pending"]
-  --skip-labeling       skip application of labels to pull requests
+  --skip-labeling                     skip application of labels to pull
+                                      requests        [boolean] [default: false]
+  --fork                              should the PR be created from a fork
                                                       [boolean] [default: false]
-  --fork                should the PR be created from a fork
+  --draft-pull-request                mark pull request as a draft
                                                       [boolean] [default: false]
-  --draft-pull-request  mark pull request as a draft  [boolean] [default: false]
-  --signoff             Add Signed-off-by line at the end of the commit log
-                        message using the user and email provided. (format "Name
-                        <email@example.com>").                          [string]
-  --config-file         where can the config file be found in the project?
+  --signoff                           Add Signed-off-by line at the end of the
+                                      commit log message using the user and
+                                      email provided. (format "Name
+                                      <email@example.com>").            [string]
+  --separate-pull-requests            open a separate release pull request for
+                                      each component   [boolean] [default: true]
+  --group-pull-request-title-pattern  when grouping multiple release pull
+                                      requests use this pattern for the title
+                                                                        [string]
+  --config-file                       where can the config file be found in the
+                                      project?
                                          [default: "release-please-config.json"]
-  --manifest-file       where can the manifest file be found in the project?
+  --manifest-file                     where can the manifest file be found in
+                                      the project?
                                       [default: ".release-please-manifest.json"]
 `
 
@@ -133,6 +155,7 @@ Options:
                                                                         [string]
   --repo-url        GitHub URL to generate release for                [required]
   --dry-run         Prepare but do not take action    [boolean] [default: false]
+  --dry-run-output  Where to output the dry-run results as JSON         [string]
   --draft           mark release as a draft. no tag is created but tag_name and
                     target_commitish are associated with the release for future
                     tag creation upon "un-drafting" the release.
@@ -146,6 +169,9 @@ Options:
   --snapshot-label  set a java snapshot pull request label other than
                     "autorelease: snapshot"
                                      [string] [default: "autorelease: snapshot"]
+  --shas-to-tag     a comma separated list of PR numbers and the corresponding
+                    sha to tag for that release in the format
+                    "1234:abc123,5678:def456"                           [string]
   --config-file     where can the config file be found in the project?
                                          [default: "release-please-config.json"]
   --manifest-file   where can the manifest file be found in the project?
@@ -158,99 +184,115 @@ release-please release-pr
 create or update a PR representing the next release
 
 Options:
-  --help                            Show help                          [boolean]
-  --version                         Show version number                [boolean]
-  --debug                           print verbose errors (use only for local
-                                    debugging).       [boolean] [default: false]
-  --trace                           print extra verbose errors (use only for
-                                    local debugging). [boolean] [default: false]
-  --plugin                          load plugin named
-                                    release-please-<plugin-name>
+  --help                              Show help                        [boolean]
+  --version                           Show version number              [boolean]
+  --debug                             print verbose errors (use only for local
+                                      debugging).     [boolean] [default: false]
+  --trace                             print extra verbose errors (use only for
+                                      local debugging).
+                                                      [boolean] [default: false]
+  --plugin                            load plugin named
+                                      release-please-<plugin-name>
                                                            [array] [default: []]
-  --token                           GitHub token with repo write permissions
-  --api-url                         URL to use when making API requests
+  --token                             GitHub token with repo write permissions
+  --api-url                           URL to use when making API requests
                                     [string] [default: "https://api.github.com"]
-  --graphql-url                     URL to use when making GraphQL requests
+  --graphql-url                       URL to use when making GraphQL requests
                                     [string] [default: "https://api.github.com"]
-  --default-branch                  The branch to open release PRs against and
-                                    tag releases on
+  --default-branch                    The branch to open release PRs against and
+                                      tag releases on
                               [deprecated: use --target-branch instead] [string]
-  --target-branch                   The branch to open release PRs against and
-                                    tag releases on                     [string]
-  --repo-url                        GitHub URL to generate release for[required]
-  --dry-run                         Prepare but do not take action
+  --target-branch                     The branch to open release PRs against and
+                                      tag releases on                   [string]
+  --repo-url                          GitHub URL to generate release for
+                                                                      [required]
+  --dry-run                           Prepare but do not take action
                                                       [boolean] [default: false]
-  --release-as                      override the semantically determined release
-                                    version                             [string]
-  --bump-minor-pre-major            should we bump the semver minor prior to the
-                                    first major release
+  --dry-run-output                    Where to output the dry-run results as
+                                      JSON                              [string]
+  --release-as                        override the semantically determined
+                                      release version                   [string]
+  --bump-minor-pre-major              should we bump the semver minor prior to
+                                      the first major release
                                                       [boolean] [default: false]
-  --bump-patch-for-minor-pre-major  should we bump the semver patch instead of
-                                    the minor for non-breaking changes prior to
-                                    the first major release
+  --bump-patch-for-minor-pre-major    should we bump the semver patch instead of
+                                      the minor for non-breaking changes prior
+                                      to the first major release
                                                       [boolean] [default: false]
-  --prerelease-type                 type of the prerelease, e.g., alpha [string]
-  --extra-files                     extra files for the strategy to consider
+  --prerelease-type                   type of the prerelease, e.g., alpha
                                                                         [string]
-  --version-file                    path to version file to update, e.g.,
-                                    version.rb                          [string]
-  --snapshot                        is it a snapshot (or pre-release) being
-                                    generated?        [boolean] [default: false]
-  --versioning-strategy             strategy used for bumping versions
+  --extra-files                       extra files for the strategy to consider
+                                                                        [string]
+  --version-file                      path to version file to update, e.g.,
+                                      version.rb                        [string]
+  --snapshot                          is it a snapshot (or pre-release) being
+                                      generated?      [boolean] [default: false]
+  --versioning-strategy               strategy used for bumping versions
         [choices: "always-bump-major", "always-bump-minor", "always-bump-patch",
                    "default", "prerelease", "service-pack"] [default: "default"]
-  --changelog-path                  where can the CHANGELOG be found in the
-                                    project?  [string] [default: "CHANGELOG.md"]
-  --changelog-type                  type of changelog to build
+  --changelog-path                    where can the CHANGELOG be found in the
+                                      project?[string] [default: "CHANGELOG.md"]
+  --changelog-type                    type of changelog to build
                                                   [choices: "default", "github"]
-  --changelog-sections              comma-separated list of scopes to include in
-                                    the changelog                       [string]
-  --changelog-host                  host for hyperlinks in the changelog[string]
-  --last-package-version            last version # that package was released as
+  --changelog-sections                comma-separated list of scopes to include
+                                      in the changelog                  [string]
+  --changelog-host                    host for hyperlinks in the changelog
+                                                                        [string]
+  --last-package-version              last version # that package was released
+                                      as
                          [deprecated: use --latest-tag-version instead] [string]
-  --latest-tag-version              Override the detected latest tag version
+  --latest-tag-version                Override the detected latest tag version
                                                                         [string]
-  --latest-tag-sha                  Override the detected latest tag SHA[string]
-  --latest-tag-name                 Override the detected latest tag name
+  --latest-tag-sha                    Override the detected latest tag SHA
                                                                         [string]
-  --label                           comma-separated list of labels to add to
-                                    from release PR
+  --latest-tag-name                   Override the detected latest tag name
+                                                                        [string]
+  --consider-all-branches             Consider commits from all branches when
+                                      determining changes for the latest release
+                                                      [boolean] [default: false]
+  --label                             comma-separated list of labels to add to
+                                      from release PR
                                                [default: "autorelease: pending"]
-  --skip-labeling                   skip application of labels to pull requests
+  --skip-labeling                     skip application of labels to pull
+                                      requests        [boolean] [default: false]
+  --fork                              should the PR be created from a fork
                                                       [boolean] [default: false]
-  --fork                            should the PR be created from a fork
+  --draft-pull-request                mark pull request as a draft
                                                       [boolean] [default: false]
-  --draft-pull-request              mark pull request as a draft
-                                                      [boolean] [default: false]
-  --signoff                         Add Signed-off-by line at the end of the
-                                    commit log message using the user and email
-                                    provided. (format "Name
-                                    <email@example.com>").              [string]
-  --include-v-in-tags               include "v" in tag versions
+  --signoff                           Add Signed-off-by line at the end of the
+                                      commit log message using the user and
+                                      email provided. (format "Name
+                                      <email@example.com>").            [string]
+  --separate-pull-requests            open a separate release pull request for
+                                      each component   [boolean] [default: true]
+  --group-pull-request-title-pattern  when grouping multiple release pull
+                                      requests use this pattern for the title
+                                                                        [string]
+  --include-v-in-tags                 include "v" in tag versions
                                                        [boolean] [default: true]
-  --monorepo-tags                   include library name in tags and release
-                                    branches          [boolean] [default: false]
-  --pull-request-title-pattern      Title pattern to make release PR    [string]
-  --pull-request-header             Header for release PR               [string]
-  --pull-request-footer             Footer for release PR               [string]
-  --path                            release from path other than root directory
-                                                                        [string]
-  --component                       name of component release is being minted
-                                    for                                 [string]
-  --package-name                    name of package release is being minted for
-                                                                        [string]
-  --release-type                    what type of repo is a release being created
-                                    for?
+  --monorepo-tags                     include library name in tags and release
+                                      branches        [boolean] [default: false]
+  --pull-request-title-pattern        Title pattern to make release PR  [string]
+  --pull-request-header               Header for release PR             [string]
+  --pull-request-footer               Footer for release PR             [string]
+  --path                              release from path other than root
+                                      directory                         [string]
+  --component                         name of component release is being minted
+                                      for                               [string]
+  --package-name                      name of package release is being minted
+                                      for                               [string]
+  --release-type                      what type of repo is a release being
+                                      created for?
    [choices: "dart", "dotnet-yoshi", "elixir", "expo", "go", "go-yoshi", "helm",
                   "java", "java-backport", "java-bom", "java-lts", "java-yoshi",
        "java-yoshi-mono-repo", "krm-blueprint", "maven", "node", "ocaml", "php",
       "php-yoshi", "python", "ruby", "ruby-yoshi", "rust", "salesforce", "sfdx",
                                                    "simple", "terraform-module"]
-  --config-file                     where can the config file be found in the
-                                    project?
+  --config-file                       where can the config file be found in the
+                                      project?
                                          [default: "release-please-config.json"]
-  --manifest-file                   where can the manifest file be found in the
-                                    project?
+  --manifest-file                     where can the manifest file be found in
+                                      the project?
                                       [default: ".release-please-manifest.json"]
 `
 

@@ -8,3 +8,12 @@ __pycache__
 package-lock.json
 debug.sh
 .idea/
+
+# Yarn (Berry) — node-modules linker; ignore caches/install state but keep yarn.lock + releases
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

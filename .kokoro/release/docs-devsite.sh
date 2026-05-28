@@ -24,7 +24,8 @@ if [[ -z "$CREDENTIALS" ]]; then
   cd $(dirname $0)/../..
 fi
 
-npm install
-npm install --no-save @google-cloud/cloud-rad@^0.4.0
+corepack enable
+yarn install --immutable
+yarn add --dev @google-cloud/cloud-rad@^0.4.0
 # publish docs to devsite
-npx @google-cloud/cloud-rad . cloud-rad
+yarn dlx @google-cloud/cloud-rad . cloud-rad

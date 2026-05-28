@@ -35,9 +35,10 @@ if [ -f .kokoro/pre-system-test.sh ]; then
     set -x
 fi
 
-npm install
+corepack enable
+yarn install --immutable
 
-npm run system-test
+yarn system-test
 
 # codecov combines coverage across integration and unit tests. Include
 # the logic below for any environment you wish to collect coverage for:

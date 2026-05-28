@@ -949,7 +949,8 @@ function extractManifestOptions(
     'groupPullRequestTitlePattern' in argv &&
     argv.groupPullRequestTitlePattern
   ) {
-    manifestOptions.groupPullRequestTitlePattern = argv.groupPullRequestTitlePattern;
+    manifestOptions.groupPullRequestTitlePattern =
+      argv.groupPullRequestTitlePattern;
   }
   return manifestOptions;
 }

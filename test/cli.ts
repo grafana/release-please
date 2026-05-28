@@ -706,7 +706,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -730,7 +731,8 @@ describe('CLI', () => {
             '1.x',
             sinon.match({releaseType: 'java-yoshi'}),
             sinon.match.any,
-            undefined
+            undefined,
+            sinon.match.any
           );
           sinon.assert.calledOnce(createPullRequestsStub);
         });
@@ -758,7 +760,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(buildPullRequestsStub);
       });
@@ -781,7 +784,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', releaseAs: '2.3.4'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -807,7 +811,8 @@ describe('CLI', () => {
             versioning: 'always-bump-patch',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -834,7 +839,8 @@ describe('CLI', () => {
             bumpPatchForMinorPreMajor: true,
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -860,7 +866,8 @@ describe('CLI', () => {
             prereleaseType: 'alpha',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -886,7 +893,8 @@ describe('CLI', () => {
             extraFiles: ['foo/bar.java', 'asdf/qwer.java'],
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -912,7 +920,8 @@ describe('CLI', () => {
             versionFile: 'lib/foo/version.rb',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -935,7 +944,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match({signoff: 'Alice <alice@example.com>'}),
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -961,7 +971,8 @@ describe('CLI', () => {
             changelogPath: 'docs/changes.md',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -987,7 +998,8 @@ describe('CLI', () => {
             changelogType: 'github',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1013,7 +1025,8 @@ describe('CLI', () => {
             changelogHost: 'https://example.com',
           }),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1035,7 +1048,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', draftPullRequest: true}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1058,7 +1072,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match({fork: true}),
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1081,7 +1096,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          'submodule'
+          'submodule',
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1104,7 +1120,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', component: 'pkg1'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1127,7 +1144,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', packageName: '@foo/bar'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1150,7 +1168,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', includeComponentInTag: true}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createPullRequestsStub);
       });
@@ -1374,7 +1393,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1400,7 +1420,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(buildReleasesStub);
       });
@@ -1423,7 +1444,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', draft: true}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1446,7 +1468,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', prerelease: true}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1472,7 +1495,8 @@ describe('CLI', () => {
             labels: ['foo', 'bar'],
             releaseLabels: ['asdf', 'qwer'],
           }),
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1495,7 +1519,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi'}),
           sinon.match.any,
-          'submodule'
+          'submodule',
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1518,7 +1543,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', component: 'pkg1'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1541,7 +1567,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', packageName: '@foo/bar'}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });
@@ -1564,7 +1591,8 @@ describe('CLI', () => {
           'main',
           sinon.match({releaseType: 'java-yoshi', includeComponentInTag: true}),
           sinon.match.any,
-          undefined
+          undefined,
+          sinon.match.any
         );
         sinon.assert.calledOnce(createReleasesStub);
       });

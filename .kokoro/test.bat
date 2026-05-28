@@ -24,8 +24,9 @@ SET PATH=%PATH%;/cygdrive/c/Program Files/nodejs/npm
 call nvm use v14.17.3
 call which node
 
-call npm install || goto :error
-call npm run test || goto :error
+call corepack enable || goto :error
+call yarn install --immutable || goto :error
+call yarn test || goto :error
 
 goto :EOF
 

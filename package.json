@@ -5,15 +5,15 @@
   "main": "./build/src/index.js",
   "bin": "./build/src/bin/release-please.js",
   "scripts": {
-    "test": "cross-env ENVIRONMENT=test LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
+    "test": "yarn compile && cross-env ENVIRONMENT=test LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
     "docs": "echo add docs tests",
-    "test:snap": "cross-env SNAPSHOT_UPDATE=1 LC_ALL=en npm test",
+    "test:snap": "yarn compile && cross-env SNAPSHOT_UPDATE=1 LC_ALL=en c8 mocha --node-option no-experimental-fetch --recursive --timeout=5000 build/test",
     "clean": "gts clean",
-    "prepare": "npm run compile",
+    "prepare": "yarn compile",
     "lint": "gts check",
     "compile": "tsc -p .",
     "fix": "gts fix",
-    "pretest": "npm run compile"
+    "pretest": "yarn compile"
   },
   "files": [
     "build/src",
@@ -100,5 +100,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "yarn@4.15.0"
 }

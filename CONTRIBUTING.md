@@ -45,15 +45,15 @@ accept your pull requests.
 
 1.  Install dependencies:
 
-        npm install
+        yarn install
 
 1.  Run the tests:
 
-        npm test
+        yarn test
 
 1.  Lint (and maybe fix) any changes:
 
-        npm run fix
+        yarn fix
 
 ## Testing a new feature using CLI
 
