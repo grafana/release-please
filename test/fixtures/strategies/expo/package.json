@@ -5,6 +5,6 @@
     "url": "git@github.com:samples/node-test-repo.git"
   },
   "dependencies": {
-    "expo": "44.0.0"
+    "expo": "48.0.0"
   }
 }
